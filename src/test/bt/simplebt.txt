@@ -1,0 +1,6 @@
+root("root")
+    fallback
+        sequence
+            Fail
+        sequence
+            Succeed

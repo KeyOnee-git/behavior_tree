@@ -1,0 +1,24 @@
+{
+  "name": "behavior_tree",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "gg": "???"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KeyOnee-git/behavior_tree.git"
+  },
+  "keywords": [
+    "Behavior",
+    "Tree"
+  ],
+  "author": "KeyOnee",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/KeyOnee-git/behavior_tree/issues"
+  },
+  "homepage": "https://github.com/KeyOnee-git/behavior_tree#readme"
+}

@@ -1,0 +1,73 @@
+{
+    "editor.formatOnType": true,
+    "workbench.colorTheme": "Kimbie Dark",
+    "editor.tokenColorCustomizations": {
+        "[Kimbie Dark]": {
+            "textMateRules": [
+                {
+                    "scope":"panda.bt.tree",
+                    "settings": {
+                        "foreground": "#2c7203",
+                        "fontStyle": "bold"
+                    }
+                },             
+                {
+                    "scope":"panda.bt.node",
+                    "settings": {
+                        "foreground": "#1a8ad4"
+                    }
+                },
+                {
+                    "scope":"panda.bt.control",
+                    "settings": {
+                        "foreground": "#ce1ad4"
+                    }
+                },
+                {
+                    "scope":"panda.bt.decorator",
+                    "settings": {
+                        "foreground": "#d13939"
+                    }
+                },
+                {
+                    "scope":"panda.bt.behaivors.btc.core",
+                    "settings": {
+                        "foreground": "#8AB1B0",
+                        "fontStyle": "bold"
+                    }
+                },
+                {
+                    "scope":"panda.bt.behaivors.btc",
+                    "settings": {
+                        "foreground": "#8AB1B0",
+                        "fontStyle": "italic"
+                    }
+                },
+                {
+                    "scope":"comment.line.double-slash.bt",
+                    "settings": {
+                        "foreground": "#6b6b6b"
+                    }
+                },           
+                {
+                    "scope":"punctuation.definition.comment.bt",
+                    "settings": {
+                        "foreground": "#6b6b6b"
+                    }
+                },
+                {
+                    "scope":"string.quoted.double.bt",
+                    "settings": {
+                        "foreground": "#c9da91"
+                    }
+                },
+                {
+                    "scope":"constant.character.escape.bt",
+                    "settings": {
+                        "foreground": "#889B4A"
+                    }
+                }
+            ]
+        }
+    }
+}
