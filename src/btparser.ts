@@ -85,7 +85,7 @@ export namespace KeyOnee.BT.Tokenizer
     }
 
     export class Token {
-        constructor(type: TokenType,) {
+        constructor(type: TokenType, start:number) {
             
         }
     }
