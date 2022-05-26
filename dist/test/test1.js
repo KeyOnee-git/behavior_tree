@@ -27,4 +27,16 @@ function GomdorTask() {
     console.log("GomdorTask");
     return BT.Status.Succeeded;
 }
+var parameters = [];
+parameters.push('abc');
+parameters.push(1);
+parameters.push(3);
+parameters.push('cdedfg');
+for (var i in parameters) {
+    console.log("in => i: " + i + " : " + parameters[i]);
+}
+for (var _i = 0, parameters_1 = parameters; _i < parameters_1.length; _i++) {
+    var i = parameters_1[_i];
+    console.log("of => i: " + i);
+}
 //# sourceMappingURL=test1.js.map

@@ -15,7 +15,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BTProgram = exports.BTTask = exports.MakeTask = exports.BTSequence = exports.MakeSequence = exports.BTFallback = exports.MakeFallback = exports.BTTree = exports.MakeTree = exports.BTCompositeNode = exports.BTNode = exports.NodeKinds = exports.Status = void 0;
+exports.SIMPLE_BT = exports.BTProgram = exports.BTTask = exports.MakeTask = exports.BTSequence = exports.MakeSequence = exports.BTFallback = exports.MakeFallback = exports.BTTree = exports.MakeTree = exports.BTCompositeNode = exports.BTNode = exports.NodeKinds = exports.Status = void 0;
 var Status;
 (function (Status) {
     Status[Status["Ready"] = 0] = "Ready";
@@ -227,11 +227,13 @@ var BTProgram = /** @class */ (function () {
         this._treeSets = null;
         BTProgram._Current = this;
     }
-    BTProgram.BuildProgram = function () {
+    BTProgram.BuildProgram = function (strBT) {
         var program = new BTProgram();
+        return program;
     };
     return BTProgram;
 }());
 exports.BTProgram = BTProgram;
 console.log('Developing... KeyOnee...');
+exports.SIMPLE_BT = "\nroot(\"root\")\n    fallback\n        sequence\n            Fail\n        sequence\n            Succeed\n";
 //# sourceMappingURL=behaviortree.js.map

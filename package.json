@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/KeyOnee-git/behavior_tree/issues"
   },
-  "homepage": "https://github.com/KeyOnee-git/behavior_tree#readme"
+  "homepage": "https://github.com/KeyOnee-git/behavior_tree#readme",
+  "dependencies": {
+    "stack-typescript": "^1.0.4"
+  }
 }
