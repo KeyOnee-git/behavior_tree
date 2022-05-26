@@ -218,9 +218,11 @@ export class BTProgram {
 console.log('Developing... KeyOnee...');
 
 export const SIMPLE_BT = `
-root("root")
+tree("root")
     fallback
         sequence
+            MoveTowardPlayer("abc", 1.0, 12)
+            KillSelf()
             Fail
         sequence
             Succeed
