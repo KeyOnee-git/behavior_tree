@@ -42,9 +42,197 @@ export namespace KeyOnee.BehaviorTree.Parser {
             }
             return this._parsedParameters;
         }
+
+        ToString(): string {
+            let strParams: string = "";
+            if (this.parameters.length > 0) {
+                strParams += "(";
+                for (let i = 0; i < this.parameters.length; i++){
+                    let p: Tokenizer.Token = this.parameters[i];
+                    strParams += p.ToString();
+                    if (i + 1 < this.parameters.length)
+                        strParams += ", ";                    
+                }
+                strParams += ")";
+            }
+            return this.token?.ToString() + strParams;
+        }
     }
 
-    export class BTLParser {
+    export class BTLParser {       
+        static indentParents: Stack<Node> = new Stack<Node>();
+        static lineParents: Stack<Node> = new Stack<Node>();
+        static indents: Stack<number> = new Stack<number>();
+        static indent: number = 0;
+
+        static ParseTokens(tokens: Tokenizer.Token[]): Parser.Node[] {            
+            if (tokens == null || tokens.length == 0)
+            {
+                let msg: string = "Invalid bt script.";
+                throw new Error(msg);
+            }
+
+            BTLParser.Clear();
+            let roots: Array<Node> = new Array<Node>();
+            let root: Node | null = null;
+            let lastNode: Node | null = null;
+            let parenthesis_opened: boolean = false;
+            for (let i = 0; i < tokens.length; ++i) {
+                let t = tokens[i];
+                let node = new Node();
+                node.token = t;
+
+                switch (t.type) {
+                    case Tokenizer.TokenType.Indent:
+                        BTLParser.indent++;
+                        break;
+                    case Tokenizer.TokenType.EOL:
+                        BTLParser.indent = 0;
+                        BTLParser.lineParents = new Stack<Node>();
+                        lastNode = null;
+                        break;
+                    case Tokenizer.TokenType.Value:
+                        // Nothing.
+                        break;
+                    case Tokenizer.TokenType.Parenthesis_Open:
+                        if (!parenthesis_opened) {
+                            parenthesis_opened = true;
+                        }
+                        else {
+                            throw new Error(`Unexpected open parenthesis. line:${t.line}`);
+                        }
+                        break;
+                    case Tokenizer.TokenType.Parenthesis_Closed:
+                        if (parenthesis_opened) {
+                            parenthesis_opened = false;
+                        }
+                        else {
+                            throw new Error(`Unexpected closed parenthesis. line:${t.line}`);
+                        }
+
+                        if (lastNode == null) {
+                            throw new Error("lastNode is null!!");
+                        }
+
+                        if (lastNode.token == null) {
+                            throw new Error("lastNode.token is null!!");
+                        }
+
+                        lastNode.parseLength = t.substring_start - lastNode.token.substring_start + t.substring_length;
+                        break;
+                    case Tokenizer.TokenType.Tree:
+                        if (BTLParser.indent == 0 && BTLParser.lineParents.length == 0) {
+                            root = node;
+                            BTLParser.indentParents = new Stack<Node>();
+                            BTLParser.indents = new Stack<number>();
+                            roots.push(root);
+                            BTLParser.PushParent(node);
+                        }
+                        else {
+                            node.token.type = Tokenizer.TokenType.TreeProxy;
+                            BTLParser.PushParent(node);
+                        }
+                        break;
+                    case Tokenizer.TokenType.Fallback:
+                    case Tokenizer.TokenType.Sequence:
+                    case Tokenizer.TokenType.Parallel:
+                    case Tokenizer.TokenType.Race:
+                    case Tokenizer.TokenType.While:
+                    case Tokenizer.TokenType.Repeat:
+                    case Tokenizer.TokenType.Mute:
+                    case Tokenizer.TokenType.Not:
+                    case Tokenizer.TokenType.Random:
+                    case Tokenizer.TokenType.Word: // push to parent to detect parenting error.
+                        BTLParser.PushParent(node);
+                        break;
+                } // switch
+
+                // Skip blanks
+                if (t.type == Tokenizer.TokenType.EOL || t.type == Tokenizer.TokenType.Indent)
+                    continue;
+                
+                // Ignore comments
+                if (t.type == Tokenizer.TokenType.Comment)
+                    continue;
+                
+                if (t.type == Tokenizer.TokenType.Parenthesis_Open || t.type == Tokenizer.TokenType.Parenthesis_Closed || t.type == Tokenizer.TokenType.Coma)
+                    continue;
+                
+                if (parenthesis_opened) {
+                    if (lastNode != null) {
+                        lastNode.parameters.push(t);
+                    }
+                }
+                else {
+                    if (t.type == Tokenizer.TokenType.Value) {
+                        if (lastNode != null) {
+                            if (lastNode.token == null) {
+                                throw new Error("lastNode.token is null!! 2");
+                            }
+
+                            lastNode.parameters.push(t);
+                            lastNode.parseLength = t.substring_start - lastNode.token.substring_start + t.substring_length;
+                            continue;
+                        }
+                        else {
+                            throw new Error(`Unexpected parameter value. line:${t.line}`);
+                        }
+                    }
+
+                    // Determine the parent of the current node.
+                    let parent: Node;
+                    // foreach adsfasdf
+
+                    lastNode = node;
+                }
+            }
+
+            return roots;
+        }
+
+        static PopParentToIndent(indent: number): void {
+            while (BTLParser.indents.length > 0 && BTLParser.indents.top >= BTLParser.indent)
+            {
+                BTLParser.indents.pop();
+                BTLParser.indentParents.pop();
+            }
+        }
+
+        static PushParent(parent: Node): void {
+            if (BTLParser.lineParents.length == 0) {
+                BTLParser.PopParentToIndent(BTLParser.indent);
+
+                // Push the node on the parent stack
+                BTLParser.indentParents.push(parent);
+                BTLParser.indents.push(BTLParser.indent);
+            }
+
+            if (parent.token == null) {
+                throw new Error("parent.token is null");
+            }
+
+            switch (parent.token.type) {
+                case Tokenizer.TokenType.Sequence:
+                case Tokenizer.TokenType.Fallback:
+                case Tokenizer.TokenType.Parallel:
+                case Tokenizer.TokenType.Race:    
+                case Tokenizer.TokenType.Random:
+                case Tokenizer.TokenType.While:
+                case Tokenizer.TokenType.Repeat:
+                case Tokenizer.TokenType.Mute:
+                case Tokenizer.TokenType.Not:
+                    BTLParser.lineParents.push(parent);
+                    break;
+            }
+        }
+        
+        static Clear(): void {
+            BTLParser.indentParents = new Stack<Node>();
+            BTLParser.lineParents = new Stack<Node>();
+            BTLParser.indents = new Stack<number>();
+            BTLParser.indent = 0;
+        }
+
         static Parsing(strBT: string): void {
             console.log(`strBT:${strBT}`);
         }
@@ -70,7 +258,7 @@ export namespace KeyOnee.BehaviorTree.Tokenizer
         Repeat,
         While,        
         Not,
-        Nute,
+        Mute,
         Parenthesis_Open,
         Parenthesis_Closed,
     }
@@ -117,7 +305,7 @@ export namespace KeyOnee.BehaviorTree.Tokenizer
             if (this.type == TokenType.Word)
                 str = this.content;
             else if (this.type == TokenType.EOL)
-                str = "[EOL]\n";
+                str = "[EOL]";  //str = "[EOL]\n";
             else if (this.type == TokenType.Value)
                 str = Tokenizer.BTLTokenizer.ParseParameter(this).toString();
             else
@@ -384,5 +572,5 @@ export namespace KeyOnee.BehaviorTree.Tokenizer
 //KeyOnee.BT.Parser.BTLParser.Parsing(BT.SIMPLE_BT);
 let res = KeyOnee.BehaviorTree.Tokenizer.Token.Tokenize(BT.SIMPLE_BT);
 for (let n of res) {
-    console.log(n.ToString());
+    console.log(`${n.ToString()}(${KeyOnee.BehaviorTree.Tokenizer.TokenType[n.type]})`);
 }
