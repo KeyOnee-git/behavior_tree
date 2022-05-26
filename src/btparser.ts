@@ -121,7 +121,7 @@ export namespace KeyOnee.BehaviorTree.Tokenizer
             else if (this.type == TokenType.Value)
                 str = Tokenizer.BTLTokenizer.ParseParameter(this).toString();
             else
-                str = `[${this.type.toString()}]`;
+                str = `[${TokenType[this.type]}]`;
                 
             return str;
         }
@@ -129,7 +129,7 @@ export namespace KeyOnee.BehaviorTree.Tokenizer
         get content(): string {
             let content: string = "";
             if (this.source != null && this.substring_start + this.substring_length <= this.source.length) {
-                content = this.source.substring(this.substring_start, this.substring_length);
+                content = this.source.substring(this.substring_start, this.substring_start + this.substring_length);
             }
             return content;
         }
@@ -150,7 +150,7 @@ export namespace KeyOnee.BehaviorTree.Tokenizer
                         this._parsedParameter = str === 'true';
                         break;
                     case TokenValueType.String:
-                        this._parsedParameter = str.substring(1, str.length - 2);
+                        this._parsedParameter = str.substring(1, 1 + str.length - 2);
                         break;
                     case TokenValueType.Enum:
                         this._parsedParameter = str; // new EnumParameter
@@ -232,7 +232,7 @@ export namespace KeyOnee.BehaviorTree.Tokenizer
                 if (EOF)
                     ++len;
                 
-                let word: string = src.substring(start, len);
+                let word: string = src.substring(start, start + len);
                 
                 // # Inline comments
                 if (word.endsWith("//"))
@@ -274,7 +274,7 @@ export namespace KeyOnee.BehaviorTree.Tokenizer
                         }
 
                         len = i - start;
-                        word = src.substring(start, len);
+                        word = src.substring(start, start + len);
 
                         if (word.length > 2) {
                             hasHitEOC = word.endsWith("*/");
@@ -299,13 +299,14 @@ export namespace KeyOnee.BehaviorTree.Tokenizer
 
                     if (word.length > 0 && (lastChar === '\n' || lastChar === ')')) {
                         --len;
-                        word = src.substring(start, len);
+                        word = src.substring(start, start + len);
                     }
 
                     let lc_word: string = word.trim().toLowerCase();
 
                     if (lc_word.trim() != "") {
                         switch (lc_word) {
+                            case "tree": token = new Token(TokenType.Tree, start, len, src, line); break;
                             case "fallback": token = new Token(TokenType.Fallback, start, len, src, line); break;
                             case "sequence": token = new Token(TokenType.Sequence, start, len, src, line); break;
                             // ToDO Case:
