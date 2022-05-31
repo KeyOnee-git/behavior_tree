@@ -232,10 +232,6 @@ export namespace KeyOnee.BehaviorTree.Parser {
             BTLParser.indents = new Stack<number>();
             BTLParser.indent = 0;
         }
-
-        static Parsing(strBT: string): void {
-            console.log(`strBT:${strBT}`);
-        }
     }
 }
 
@@ -497,7 +493,13 @@ export namespace KeyOnee.BehaviorTree.Tokenizer
                             case "tree": token = new Token(TokenType.Tree, start, len, src, line); break;
                             case "fallback": token = new Token(TokenType.Fallback, start, len, src, line); break;
                             case "sequence": token = new Token(TokenType.Sequence, start, len, src, line); break;
-                            // ToDO Case:
+                            case "parallel": token = new Token(TokenType.Parallel, start, len, src, line); break;
+                            case "race": token = new Token(TokenType.Race, start, len, src, line); break;
+                            case "while": token = new Token(TokenType.While, start, len, src, line); break;
+                            case "repeat": token = new Token(TokenType.Repeat, start, len, src, line); break;
+                            case "random": token = new Token(TokenType.Random, start, len, src, line); break;
+                            case "not": token = new Token(TokenType.Not, start, len, src, line); break;
+                            case "mute": token = new Token(TokenType.Mute, start, len, src, line); break;
 
                             default: {
                                 let tokenType = Token.GetValueType(word);
@@ -569,7 +571,6 @@ export namespace KeyOnee.BehaviorTree.Tokenizer
     }
 }
 
-//KeyOnee.BT.Parser.BTLParser.Parsing(BT.SIMPLE_BT);
 let res = KeyOnee.BehaviorTree.Tokenizer.Token.Tokenize(BT.SIMPLE_BT);
 for (let n of res) {
     console.log(`${n.ToString()}(${KeyOnee.BehaviorTree.Tokenizer.TokenType[n.type]})`);
