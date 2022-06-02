@@ -45,6 +45,17 @@
                 "${workspaceFolder}/dist/**/*.js",
                 "!**/node_modules/**"
             ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "TestGD",
+            "program": "${workspaceFolder}/src/test/testGD.ts",
+            "preLaunchTask": "tsc: build - tsconfig.json",
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*.js",
+                "!**/node_modules/**"
+            ]
         }
     ]
 }

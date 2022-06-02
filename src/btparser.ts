@@ -1,15 +1,15 @@
 import *  as BT from './behaviortree';
 import { Stack } from 'stack-typescript';
 
-export namespace KeyOnee.BehaviorTree.Parser {    
+export namespace KeyOnee.BehaviorTree {    
     export class Node {
-        public token: Tokenizer.Token | null = null;
+        public token: Token | null = null;
         public children: Array<Node> = new Array<Node>();
-        public parameters: Array<Tokenizer.Token> = new Array<Tokenizer.Token>();
+        public parameters: Array<Token> = new Array<Token>();
         public parseLength: number = 0;
 
         private _flattenChildren: Node[] | null = null;
-        get flattenChildren(): Node[] | null{
+        get flattenChildren(): Node[]{
             if (this._flattenChildren == null) {
                 let stack = new Stack<Node>();
                 let nodes = new Array<Node>();
@@ -36,7 +36,7 @@ export namespace KeyOnee.BehaviorTree.Parser {
             if (this._parsedParameters == null) {
                 let parameters: any[] = [];
                 for (let p of this.parameters) {
-                    parameters.push(Tokenizer.BTLTokenizer.ParseParameter(p));
+                    parameters.push(BTLTokenizer.ParseParameter(p));
                 }
                 this._parsedParameters = parameters;
             }
@@ -48,7 +48,7 @@ export namespace KeyOnee.BehaviorTree.Parser {
             if (this.parameters.length > 0) {
                 strParams += "(";
                 for (let i = 0; i < this.parameters.length; i++){
-                    let p: Tokenizer.Token = this.parameters[i];
+                    let p: Token = this.parameters[i];
                     strParams += p.ToString();
                     if (i + 1 < this.parameters.length)
                         strParams += ", ";                    
@@ -65,7 +65,7 @@ export namespace KeyOnee.BehaviorTree.Parser {
         static indents: Stack<number> = new Stack<number>();
         static indent: number = 0;
 
-        static ParseTokens(tokens: Tokenizer.Token[]): Parser.Node[] {            
+        static ParseTokens(tokens: Token[]): Node[] {            
             if (tokens == null || tokens.length == 0)
             {
                 let msg: string = "Invalid bt script.";
@@ -83,18 +83,18 @@ export namespace KeyOnee.BehaviorTree.Parser {
                 node.token = t;
 
                 switch (t.type) {
-                    case Tokenizer.TokenType.Indent:
+                    case TokenType.Indent:
                         BTLParser.indent++;
                         break;
-                    case Tokenizer.TokenType.EOL:
+                    case TokenType.EOL:
                         BTLParser.indent = 0;
                         BTLParser.lineParents = new Stack<Node>();
                         lastNode = null;
                         break;
-                    case Tokenizer.TokenType.Value:
+                    case TokenType.Value:
                         // Nothing.
                         break;
-                    case Tokenizer.TokenType.Parenthesis_Open:
+                    case TokenType.Parenthesis_Open:
                         if (!parenthesis_opened) {
                             parenthesis_opened = true;
                         }
@@ -102,7 +102,7 @@ export namespace KeyOnee.BehaviorTree.Parser {
                             throw new Error(`Unexpected open parenthesis. line:${t.line}`);
                         }
                         break;
-                    case Tokenizer.TokenType.Parenthesis_Closed:
+                    case TokenType.Parenthesis_Closed:
                         if (parenthesis_opened) {
                             parenthesis_opened = false;
                         }
@@ -120,7 +120,7 @@ export namespace KeyOnee.BehaviorTree.Parser {
 
                         lastNode.parseLength = t.substring_start - lastNode.token.substring_start + t.substring_length;
                         break;
-                    case Tokenizer.TokenType.Tree:
+                    case TokenType.Tree:
                         if (BTLParser.indent == 0 && BTLParser.lineParents.length == 0) {
                             root = node;
                             BTLParser.indentParents = new Stack<Node>();
@@ -129,33 +129,33 @@ export namespace KeyOnee.BehaviorTree.Parser {
                             BTLParser.PushParent(node);
                         }
                         else {
-                            node.token.type = Tokenizer.TokenType.TreeProxy;
+                            node.token.type = TokenType.TreeProxy;
                             BTLParser.PushParent(node);
                         }
                         break;
-                    case Tokenizer.TokenType.Fallback:
-                    case Tokenizer.TokenType.Sequence:
-                    case Tokenizer.TokenType.Parallel:
-                    case Tokenizer.TokenType.Race:
-                    case Tokenizer.TokenType.While:
-                    case Tokenizer.TokenType.Repeat:
-                    case Tokenizer.TokenType.Mute:
-                    case Tokenizer.TokenType.Not:
-                    case Tokenizer.TokenType.Random:
-                    case Tokenizer.TokenType.Word: // push to parent to detect parenting error.
+                    case TokenType.Fallback:
+                    case TokenType.Sequence:
+                    case TokenType.Parallel:
+                    case TokenType.Race:
+                    case TokenType.While:
+                    case TokenType.Repeat:
+                    case TokenType.Mute:
+                    case TokenType.Not:
+                    case TokenType.Random:
+                    case TokenType.Word: // push to parent to detect parenting error.
                         BTLParser.PushParent(node);
                         break;
                 } // switch
 
                 // Skip blanks
-                if (t.type == Tokenizer.TokenType.EOL || t.type == Tokenizer.TokenType.Indent)
+                if (t.type == TokenType.EOL || t.type == TokenType.Indent)
                     continue;
                 
                 // Ignore comments
-                if (t.type == Tokenizer.TokenType.Comment)
+                if (t.type == TokenType.Comment)
                     continue;
                 
-                if (t.type == Tokenizer.TokenType.Parenthesis_Open || t.type == Tokenizer.TokenType.Parenthesis_Closed || t.type == Tokenizer.TokenType.Coma)
+                if (t.type == TokenType.Parenthesis_Open || t.type == TokenType.Parenthesis_Closed || t.type == TokenType.Coma)
                     continue;
                 
                 if (parenthesis_opened) {
@@ -164,7 +164,7 @@ export namespace KeyOnee.BehaviorTree.Parser {
                     }
                 }
                 else {
-                    if (t.type == Tokenizer.TokenType.Value) {
+                    if (t.type == TokenType.Value) {
                         if (lastNode != null) {
                             if (lastNode.token == null) {
                                 throw new Error("lastNode.token is null!! 2");
@@ -212,18 +212,357 @@ export namespace KeyOnee.BehaviorTree.Parser {
             }
 
             switch (parent.token.type) {
-                case Tokenizer.TokenType.Sequence:
-                case Tokenizer.TokenType.Fallback:
-                case Tokenizer.TokenType.Parallel:
-                case Tokenizer.TokenType.Race:    
-                case Tokenizer.TokenType.Random:
-                case Tokenizer.TokenType.While:
-                case Tokenizer.TokenType.Repeat:
-                case Tokenizer.TokenType.Mute:
-                case Tokenizer.TokenType.Not:
+                case TokenType.Sequence:
+                case TokenType.Fallback:
+                case TokenType.Parallel:
+                case TokenType.Race:    
+                case TokenType.Random:
+                case TokenType.While:
+                case TokenType.Repeat:
+                case TokenType.Mute:
+                case TokenType.Not:
                     BTLParser.lineParents.push(parent);
                     break;
             }
+        }
+
+        static GetNodes(trees: Node[] | null): Node[] {
+            let count: number = 0;
+            if (!!trees) {
+                for (let tree of trees) {
+                    if (!!tree) {
+                        if (tree.flattenChildren == null)
+                            throw new Error("tree.flattenChildren is null!");
+                        
+                        count += tree.flattenChildren.length;
+                    }
+                }
+            }
+
+            let nodes: Array<Node> = new Array<Node>(count);
+            let i: number = 0;
+            if (!!trees) {
+                for (let tree of trees) {
+                    if (tree != null) {
+                        let children = tree.flattenChildren;
+                        for (let n of children) {
+                            nodes[i] = n;
+                            i++;
+                        }
+                    }
+                }
+            }
+
+            return nodes;
+        }
+        static GetProxies(tree: Node | null): Node[] {
+            let stack: Stack<Node | null> = new Stack<Node>();
+            let nodes: Array<Node> = new Array<Node>();
+            stack.push(tree);
+            while (stack.length > 0) {
+                let node = stack.pop();
+                if (!node)
+                    continue;
+                
+                if (node.token == null) {
+                    throw new Error('node.token is null');
+                }
+                
+                if (node.token.type == TokenType.TreeProxy)
+                    nodes.push(node);
+                
+                for (let c = node.children.length - 1; c >= 0; --c) {
+                    let child = node.children[c];
+                    stack.push(child);
+                }
+            }
+            return nodes;
+        }
+
+        static GetProxiesOfTrees(trees: Node[] | null): Node[] {
+            let nodes: Node[] = new Array<Node>();
+            if (!!trees) {
+                for (let b of trees) {
+                    nodes.concat(BTLParser.GetProxies(b));
+                }
+            }
+            return nodes;
+        }
+
+        static CheckProxies(roots: Node[], rootSets: Node[][]): void {
+            BTLParser.CheckProxyDefinitions(roots, rootSets);
+            BTLParser.CheckCircularDefinition(roots, rootSets);
+        }
+        static CheckTreeNames(trees: Node[], treeSets: Node[][]): void {
+            if (!trees || !treeSets) {
+                return;
+            }
+
+            for (let r = 0; r < trees.length; r++) {
+                let tree = trees[trees.length - r - 1];
+                let treeName = BTLParser.GetTreeName(tree);
+
+                for (let k = 0; k < treeSets.length; k++) {
+                    let i = treeSets.length - k - 1;
+                    if (!treeSets[i])
+                        continue;
+                    
+                    for (let l = 0; l < treeSets[i].length; l++) {
+                        let j = treeSets[i].length - l - 1;
+
+                        let other = treeSets[i][j];
+                        if (tree == other) {
+                            console.log(`[OK:CheckTreeNames] tree == other`); // 그냥 여기 타는지 로그 보고 싶어서 넣어둠. 타는거 확인하면 지우기.
+                            continue; 
+                        }
+                            
+                        let otherName = BTLParser.GetTreeName(other);
+                        if (otherName == treeName) {
+                            throw new Error(`Tree "${treeName}" is already defined.`);
+                        }
+                    }
+                }
+            }
+        }
+        static CheckMains(trees: Node[], treeSets: Node[][]): void {
+            if (!trees || !treeSets)
+                return;
+            
+            for (let r = 0; r < trees.length; r++) {
+                let mainCount = 0;
+                let tree = trees[trees.length - r - 1];
+                let treeName = BTLParser.GetTreeName(tree);
+
+                if (treeName.toLowerCase() != 'root')
+                    continue;
+                
+                mainCount++;
+
+                for (let k = 0; k < treeSets.length; k++) {
+                    let i = treeSets.length - k - 1;
+                    if (!treeSets[i])
+                        continue;
+                    
+                    for (let l = 0; l < treeSets[i].length; l++) {
+                        let j = treeSets[i].length - l - 1;
+
+                        let other = treeSets[i][j];
+                        if (tree == other) {
+                            console.log(`[OK:CheckMains] tree == other`); // 그냥 여기 타는지 로그 보고 싶어서 넣어둠. 타는거 확인하면 지우기.
+                            continue; 
+                        }
+
+                        let otherName = BTLParser.GetTreeName(other);
+                        if (otherName.toLowerCase() == 'root')
+                        {
+                            throw new Error(`Tree "${treeName}" is already defined`);
+                        }
+                    }
+                }
+            }
+        }
+
+        private static ResolveProxy(proxyName: string, rootSets: Node[][]): Node | null {
+            let proxy: Node | null = null;
+            for (let set of rootSets) {
+                if (!!set) {
+                    for (let bh of set) {
+                        if (!!bh) {
+                            let name: string = BTLParser.GetTreeName(bh);
+                            if (name == proxyName)
+                            {
+                                proxy = bh;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (proxy != null)
+                    break;
+            }
+
+            return proxy;
+        }
+
+        static CheckProxyDefinitions(trees: Node[], treeSets: Node[][]): void {
+            // Check whether all sub trees are defined
+            let proxies = BTLParser.GetProxiesOfTrees(trees);
+            for (let proxy of proxies) {
+                let isDefined = false;
+                let proxyName = BTLParser.GetTreeName(proxy);
+
+                let resolved = BTLParser.ResolveProxy(proxyName, treeSets);
+                isDefined = resolved != null;
+
+                if (!isDefined) {
+                    throw new Error(`Tree "${proxyName}" is not defined`);
+                }
+            }
+        }
+        static CheckCircularDefinition(roots: Node[], rootSets: Node[][]): void {
+            if (!roots)
+                return;
+            
+            for (let i = 0; i < roots.length; i++) {
+                let root = roots[i];
+                BTLParser.CheckCircularDefinitionRoot(root, rootSets);
+            }
+        }
+        static CheckCircularDefinitionRoot(root: Node, rootSets: Node[][]): void {
+            let stack = new Stack<Node | null>();
+            let depths = new Stack<number>();
+            let path = new Stack<Node | null>();
+
+            if (root != null) {
+                stack.push(root);
+                depths.push(0);
+            }
+
+            while (stack.length > 0) {
+                let tree = stack.pop();
+                let depth = depths.pop();
+
+                while (path.length > depth)
+                    path.pop();
+                
+                path.push(tree);
+
+                let proxies = BTLParser.GetProxies(tree);
+                for (let proxy of proxies) {
+                    // resolve
+                    let proxyName = proxy.parameters[0].ToString().trim();
+                    let subTree = BTLParser.ResolveProxy(proxyName, rootSets);
+
+                    if (BTLParser.StackContains(path, subTree) == false) {
+                        stack.push(subTree);
+                        depths.push(depth + 1);
+                    }
+                    else {
+                        if (subTree == null)
+                            throw new Error('subTree is null!!'); // 여기는 subTree null이 올수 없음.
+
+                        path.push(subTree);
+
+                        let treeName = BTLParser.GetTreeName(subTree);
+                        let msg = `Tree "${treeName}" is circularly defined. Circular tree definition is invalid.`;
+
+                        let callPath = '';
+                        let pathArray = path.toArray();
+                        for (let i = 0; i < pathArray.length; i++) {
+                            let j = pathArray.length - i - 1;
+
+                            let n = pathArray[j];
+                            if (!n) {
+                                throw new Error('n is null!!'); // Never null!!
+                            }
+                            let name = BTLParser.GetTreeName(n);
+                            callPath += `/${name}`;                            
+                        }
+                        msg += `call path: "${callPath}"`;
+
+                        if (!subTree.token)
+                            throw new Error(`${msg}`);
+                        
+                        throw new Error(`${msg} line:${subTree.token.line}`)
+                    }
+                }
+            }
+        }
+
+        static GetTreeName(tree: Node): string {
+            return BTLTokenizer.ParseParameter(tree.parameters[0]).toString();            
+        }
+
+        static CheckTree(root: Node): void {
+            let nodes = root.flattenChildren;
+            for (let n of nodes) {
+                if (!n.token)
+                    throw new Error(`null token`);
+                
+                let t = n.token;
+                
+                switch (t.type) {
+                    case TokenType.Word:
+                        // Action has no child
+                        if (n.children.length != 0) {
+                            throw new Error(`Task node has ${n.children.length} children. None is expected`);
+                        }
+                        break;
+                    case TokenType.While:
+                        if (n.children.length != 2) {
+                            throw new Error(`While node has ${n.children.length} children. 2 are expected`);
+                        }
+                        break;
+                    case TokenType.Parallel:
+                        // Paralllel node must have one child and it must be a task.
+                        if (n.children.length == 0) {
+                            throw new Error(`Parallel node has no child. One or more is expected`);
+                        }
+                        break;
+                    case TokenType.Tree:
+                        if (n.parameters.length != 1) {
+                            throw new Error(`Tree naming error. Tree name is expected as parameter of type string.`);
+                        }
+
+                        // Root node must have one or more child and it must be a task.
+                        if (n.children.length == 0) {
+                            throw new Error(`Tree node has no child. One is expected`);
+                        }
+
+                        // Root node must have one child and it must be a task.
+                        if (n.children.length > 1) {
+                            throw new Error(`Tree node has too many children. Only One is expected`);
+                        }
+                        break;
+                    case TokenType.TreeProxy:
+                        if (n.parameters.length != 1) {
+                            throw new Error(`Tree naming error. Tree name is expected as parameter of type string.`);
+                        }
+
+                        // Root node must have on child and it must be a task.
+                        if (n.children.length > 0) {
+                            throw new Error(`Tree reference has children. None is expected.`);
+                        }
+                        break;
+                    case TokenType.Fallback:
+                        // Fallback node must have one child and it must be a task.
+                        if (n.children.length == 0) {
+                            throw new Error(`Fallback node has no child. One or more is expected.`);
+                        }
+                        break;
+                }
+            }
+        }
+
+        static ToString(tree: Node): string
+        {
+            let strout: string = "";
+            // ASCII Tree
+            let fifo = new Stack<Node>();
+            let indents = new Stack<number>();
+            let i = 0;
+            fifo.push(tree);
+            indents.push(i);
+
+            while (fifo.length > 0)
+            {
+                let node = fifo.pop();
+                let indent = indents.pop();
+                let line = "";
+                for (let t = 0; t < indent; ++t) {
+                    line += "-";
+                }
+                line += node.ToString();
+                strout += line + '\n';
+                for (let c = node.children.length - 1; c >= 0; --c) {
+                    let child = node.children[c];
+                    fifo.push(child);
+                    indents.push(indent + 1);
+                }
+            }
+            
+            return strout;
         }
         
         static Clear(): void {
@@ -233,13 +572,22 @@ export namespace KeyOnee.BehaviorTree.Parser {
             BTLParser.indent = 0;
         }
 
-        static Parsing(strBT: string): void {
-            console.log(`strBT:${strBT}`);
+        static StackContains(stack: Stack<Node | null>, node: Node | null): boolean {
+            if (node == null)
+                return false;
+
+            for (let n of stack) {
+                if (n === node) {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
 
-export namespace KeyOnee.BehaviorTree.Tokenizer
+export namespace KeyOnee.BehaviorTree
 {
     export enum TokenType {
         Word,
@@ -307,7 +655,7 @@ export namespace KeyOnee.BehaviorTree.Tokenizer
             else if (this.type == TokenType.EOL)
                 str = "[EOL]";  //str = "[EOL]\n";
             else if (this.type == TokenType.Value)
-                str = Tokenizer.BTLTokenizer.ParseParameter(this).toString();
+                str = BTLTokenizer.ParseParameter(this).toString();
             else
                 str = `[${TokenType[this.type]}]`;
                 
@@ -569,8 +917,8 @@ export namespace KeyOnee.BehaviorTree.Tokenizer
     }
 }
 
-//KeyOnee.BT.Parser.BTLParser.Parsing(BT.SIMPLE_BT);
-let res = KeyOnee.BehaviorTree.Tokenizer.Token.Tokenize(BT.SIMPLE_BT);
-for (let n of res) {
-    console.log(`${n.ToString()}(${KeyOnee.BehaviorTree.Tokenizer.TokenType[n.type]})`);
+let res = KeyOnee.BehaviorTree.Token.Tokenize(BT.SIMPLE_BT);
+for (let token of res) {
+    console.log(`${token.ToString()}(${KeyOnee.BehaviorTree.TokenType[token.type]})`);
 }
+

@@ -1,5 +1,6 @@
 import *  as BT from '../behaviortree';
 
+
 let action = BT.MakeTask('GAction', GomdorTask);
 action.Reset();
 action.Tick();
