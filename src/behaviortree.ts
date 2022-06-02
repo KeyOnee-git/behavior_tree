@@ -217,13 +217,11 @@ export class BTProgram {
 
 console.log('Developing... KeyOnee...');
 
-export const SIMPLE_BT = `
-tree("root")
+export const SIMPLE_BT = `tree("root")
     fallback
         sequence
             MoveTowardPlayer("abc", 1.0, 12, 3.14)
             KillSelf()
             Fail
         sequence
-            Succeed
-`;
+            Succeed`;

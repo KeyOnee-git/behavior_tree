@@ -1,6 +1,8 @@
 tree("root")
     fallback
         sequence
+            MoveTowardPlayer("abc", 1.0, 12, 3.14)
+            KillSelf()
             Fail
         sequence
             Succeed
